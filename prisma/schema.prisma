@@ -10,42 +10,59 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      =  env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
-
-
 model Author {
-  id        Int     @id @default(autoincrement())
-  name      String
-  books     Book[]
+  id    Int    @id @default(autoincrement())
+  name  String
+  books Book[]
 }
 
 model Book {
-  id         Int      @id @default(autoincrement())
-  title      String
-  description    String?
-  publisher    String?
-  publishedAt DateTime
-  authorId   Int
-  thumbnail String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String?
+  publisher     String?
+  publishedAt   DateTime
+  coverImageUrl String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  author     Author   @relation(fields: [authorId], references: [id])
-  // reviews Review[]
+  authorId Int
+  author   Author @relation(fields: [authorId], references: [id])
+
+  // Many-to-many relation
+  genres BookGenre[]
+}
+
+model Genre {
+  id    Int         @id @default(autoincrement())
+  genre String      @unique
+  books BookGenre[]
+}
+
+model BookGenre {
+  id      Int @id @default(autoincrement()) // add autoincrement
+  bookId  Int
+  genreId Int
+
+  book  Book  @relation(fields: [bookId], references: [id])
+  genre Genre @relation(fields: [genreId], references: [id])
+
+  @@unique([bookId, genreId]) // prevent duplicates
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
-  passwordHash  String
-  bio       String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  bio          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  // reviews   Review[]
+  // reviews Review[]
 }
 
 // model Review {
