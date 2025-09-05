@@ -1,19 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { GenreDto } from './dto/genre.dto';
+import { BooksRepository } from './books.repository';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class BooksService {
-  create(createBookDto: CreateBookDto) {
-    return 'This action adds a new book';
-  }
+
+  constructor(private readonly bookRepo: BooksRepository) {}
+  
+
+  async createBook(dto: CreateBookDto) {
+  return this.bookRepo.addBook(dto);
+}
 
   findAll() {
-    return `This action returns all books`;
+    return this.bookRepo.findAllBooks();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} book`;
+    return this.bookRepo.findOneBook(id);
   }
 
   update(id: number, updateBookDto: UpdateBookDto) {
@@ -22,5 +29,9 @@ export class BooksService {
 
   remove(id: number) {
     return `This action removes a #${id} book`;
+  }
+
+  addGenre(genreDto: Prisma.GenreCreateInput) {
+     return this.bookRepo.addBookGenre(genreDto);
   }
 }

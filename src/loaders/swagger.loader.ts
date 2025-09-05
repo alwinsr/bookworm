@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-export async function swaggerLoader(app: INestApplication) {
+export function swaggerLoader(app: INestApplication) {
   const config = new DocumentBuilder()
     .setTitle('Bookworm API')
     .setDescription('API docs')
