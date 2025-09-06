@@ -1,56 +1,84 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'prisma/prisma.service';
-import { CreateBookDto } from './dto/create-book.dto';
-import { Book, Prisma } from '@prisma/client';  // 👈 auto-generated type
-import { GenreDto } from './dto/genre.dto';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "prisma/prisma.service";
+import { Prisma } from "@prisma/client";
+import { AddBookDto } from "./dto/add-book.dto";
 
 @Injectable()
 export class BooksRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findOneBook(id: number){
-    return this.prisma.book.findUnique({
-        where:  {
-            id,
-        }
-    })
-  }
-
-  async findAllBooks(){
-    return this.prisma.book.findMany();
-  }
-
-    async addBook(data: CreateBookDto) {
-    return this.prisma.book.create({
-        data: {
-        title: data.title,
-        description: data.description,
-        publisher: data.publisher,
-        publishedAt: data.publishedAt ? new Date(data.publishedAt),
-        coverImageUrl: data.coverImageUrl,
-        ...(data.genreIds?.length
-            ? {
-                genres: {
-                create: data.genreIds.map((id) => ({
-                    genre: { connect: { id } },
-                })),
-                },
-            }
-            : {}),
+  async findManyByTitle(title: string) {
+    return this.prisma.book.findMany({
+      where: {
+        title: {
+          contains: title,
+          mode: "insensitive",
         },
-        include: {
+      },
+      include: {
+        author: true,
         genres: { include: { genre: true } },
-        },
+      },
     });
-    }
-
-  async addBookGenre(createGenreDto: Prisma.GenreCreateInput){
-    return this.prisma.genre.create({
-        data : createGenreDto
-    })
   }
 
-  
+  private async findOrCreateAuthor(name: string) {
+    let author = await this.prisma.author.findFirst({
+      where: { name },
+    });
+    if (!author) {
+      author = await this.prisma.author.create({
+        data: { name },
+      });
+    }
+    return author;
+  }
 
+  private async findOrCreateGenres(genreNames: string[]) {
+    const genres = await Promise.all(
+      genreNames.map(async (genreName) => {
+        let genre = await this.prisma.genre.findUnique({
+          where: { genre: genreName },
+        });
+        if (!genre) {
+          genre = await this.prisma.genre.create({
+            data: { genre: genreName },
+          });
+        }
+        return genre;
+      }),
+    );
+    return genres;
+  }
 
+  async addBook(dto: AddBookDto) {
+    const author = await this.findOrCreateAuthor(dto.authorName);
+    const genres = dto.genres ? await this.findOrCreateGenres(dto.genres) : [];
+
+    const bookData: Prisma.BookCreateInput = {
+      title: dto.title,
+      description: dto.description,
+      publisher: dto.publisher,
+      publishedAt: new Date(dto.publishedAt),
+      coverImageUrl: dto.thumbnail,
+      author: {
+        connect: { id: author.id },
+      },
+      genres: {
+        create: genres.map((genre) => ({
+          genre: {
+            connect: { id: genre.id },
+          },
+        })),
+      },
+    };
+
+    return this.prisma.book.create({
+      data: bookData,
+      include: {
+        author: true,
+        genres: { include: { genre: true } },
+      },
+    });
+  }
 }

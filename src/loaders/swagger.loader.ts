@@ -1,14 +1,14 @@
-import { INestApplication } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { INestApplication } from "@nestjs/common";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 export function swaggerLoader(app: INestApplication) {
   const config = new DocumentBuilder()
-    .setTitle('Bookworm API')
-    .setDescription('API docs')
-    .setVersion('1.0')
+    .setTitle("Bookworm API")
+    .setDescription("API docs")
+    .setVersion("1.0")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/', app, document);
-  console.log('✅ Swagger docs enabled');
+  SwaggerModule.setup("/", app, document);
+  console.log("✅ Swagger docs enabled");
 }

@@ -1,3 +1,3 @@
 export class GenreDto {
-    genre: string;
+  genre: string;
 }
